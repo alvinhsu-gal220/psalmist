@@ -1,0 +1,8 @@
+# Temporary development artifacts; retain the repeatable regression checks.
+work/*
+!work/verify.cjs
+!work/verify-extra.cjs
+
+# Local dependencies and generated staging output.
+node_modules/
+build/
