@@ -6,3 +6,6 @@ work/*
 # Local dependencies and generated staging output.
 node_modules/
 build/
+
+# Design references are excluded from commit checks and staging.
+/design/

@@ -5,6 +5,8 @@ Date: October 13, 2026
 Status: Proposed implementation specification  
 Requirements baseline: `psalms-web-app-user-requirements.md`, version 1.17
 
+Past-entry design addendum (October 16, 2026): [PAST_ENTRY_DESIGN.md](design/past-entry/PAST_ENTRY_DESIGN.md) records the selected three-column journal view, Lucida Handwriting response, edit-before-typing interaction, and independent horizontally collapsible side panels with the right panel collapsed by default. For past-entry presentation, that addendum takes precedence over conflicting layout and typography guidance below. [Saved interactive reference](design/past-entry/past-entry-reference.html).
+
 ## 1. Purpose and design philosophy
 
 Psalmist is a quiet place to read a Psalm, mark meaningful words, write a response, and return to saved moments. The interface should feel like a personal reading journal: warm, clear, and spacious.
