@@ -2,6 +2,7 @@
 work/*
 !work/verify.cjs
 !work/verify-extra.cjs
+!work/verify-past-entry.cjs
 
 # Local dependencies and generated staging output.
 node_modules/

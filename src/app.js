@@ -10,6 +10,62 @@
   const textDirty=()=>draft.text!==(entry?.text||'');
   const marksDirty=()=>S.canonical(draft.highlights)!==S.canonical(entry?.highlights||[]);
   const dirty=()=>!!profile&&(textDirty()||marksDirty());
+  const narrow=matchMedia('(max-width:850px)');
+  const view={past:false,editing:false,scriptureCollapsed:false,sidebarCollapsed:true,drawer:null};
+  const isPast=()=>!!profile&&!!selected&&selected<today();
+  function renderResponse(){
+    const past=isPast(),editing=!past||view.editing||textDirty()||marksDirty()||stale;
+    $('responseRead').textContent=entry?.text||'No response saved yet.';
+    $('responseRead').hidden=editing;$('responseEditor').hidden=!editing;
+    $('editResponse').hidden=!past||editing;$('cancelResponse').hidden=!past||!editing;
+    $('save').hidden=!editing;$('responseDate').hidden=!past;
+    $('editResponse').disabled=busy||stale;$('cancelResponse').disabled=busy||stale;
+  }
+  function renderPanels(){
+    const past=isPast(),left=past&&(narrow.matches||view.scriptureCollapsed),right=past&&(narrow.matches||view.sidebarCollapsed);
+    $('journalLayout').dataset.view=past?'past':'today';
+    $('journalLayout').dataset.scriptureCollapsed=String(left);$('journalLayout').dataset.sidebarCollapsed=String(right);
+    $('scriptureHeading').hidden=!past;$('sidebarHeading').hidden=!past;$('yourDays').hidden=!past;
+    $('scriptureLabel').hidden=left;$('sidebarLabel').hidden=right;
+    $('scriptureRail').hidden=!left;$('sidebarRail').hidden=!right;
+    for(const [kind,collapsed] of [['scripture',left],['sidebar',right]]){
+      const button=$(kind==='scripture'?'toggleScripture':'toggleSidebar'),expanded=view.drawer===kind||!collapsed;
+      button.setAttribute('aria-expanded',String(expanded));button.setAttribute('aria-label',(expanded?'Collapse ':'Expand ')+kind);
+      button.firstElementChild.textContent=kind==='scripture'?(expanded?'‹':'›'):(expanded?'›':'‹');
+      $(kind+'Content').hidden=collapsed&&view.drawer!==kind;
+    }
+  }
+  function closePanel(restoreFocus=true){
+    if(!view.drawer)return;
+    const kind=view.drawer;view.drawer=null;
+    $(kind==='scripture'?'readingCard':'journalSidebar').append($(kind+'Content'));
+    $('panelDialog').close();renderPanels();
+    if(restoreFocus)$(kind==='scripture'?'toggleScripture':'toggleSidebar').focus();
+  }
+  function openPanel(kind,section){
+    if(!isPast())return;
+    if(narrow.matches){
+      if(view.drawer!==kind){
+        closePanel(false);view.drawer=kind;$('panelDialog').dataset.panel=kind;
+        $('panelDialogTitle').textContent=kind==='scripture'?'Your reading':'Your journal';
+        $('panelDialogBody').append($(kind+'Content'));renderPanels();$('panelDialog').showModal();
+      }
+      (section?$(section):$('closePanel')).focus();
+    }else{
+      view[kind==='scripture'?'scriptureCollapsed':'sidebarCollapsed']=false;renderPanels();
+      if(section){$(section).focus();$(section).scrollIntoView({block:'nearest'});}
+    }
+  }
+  function togglePanel(kind){
+    if(narrow.matches){if(view.drawer===kind)closePanel();else openPanel(kind);return;}
+    const key=kind==='scripture'?'scriptureCollapsed':'sidebarCollapsed';view[key]=!view[key];renderPanels();
+  }
+  function syncView(){
+    const past=isPast();
+    if(view.past!==past){closePanel(false);view.past=past;view.scriptureCollapsed=narrow.matches;view.sidebarCollapsed=true;}
+    $('entryHeading').textContent=past?'A moment, remembered.':'A moment in the Psalms.';
+    renderPanels();renderResponse();
+  }
   const passages=()=>pack.chapters[S.reading(profile,selected).chapter-1].verses.slice(S.reading(profile,selected).first-1,S.reading(profile,selected).last);
   function notice(text,error=false){$('notice').textContent=text;$('notice').classList.toggle('error',error);}
   function controls(){
@@ -33,8 +89,10 @@
     $('modified').textContent=profile&&entry?.modified?'Last modified '+new Date(entry.modified).toLocaleString(undefined,{timeZone:profile.timeZone,timeZoneName:'short'}):'';
     if(stale){$('save').disabled=busy;$('save').textContent='Review latest data';}
     document.querySelectorAll('.color').forEach(b=>b.setAttribute('aria-pressed',String(draft.highlights.find(h=>h.id===chosen)?.color===b.dataset.color)));
+    renderResponse();
   }
   function choose(title,message,options){
+    closePanel();
     return new Promise(resolve=>{
       const dialog=$('choiceDialog');$('choiceTitle').textContent=title;$('choiceMessage').textContent=message;$('choiceActions').replaceChildren();
       let answered=false;const finish=value=>{if(answered)return;answered=true;dialog.close();resolve(value);};
@@ -123,18 +181,20 @@
   function render(){
     if(!profile||!selected||!pack)return;const r=S.reading(profile,selected),day=S.day(selected)-S.day(profile.startDate)+1;
     $('dateLabel').textContent=new Date(selected+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'UTC'});
+    $('responseDate').textContent=$('dateLabel').textContent;
     $('dayLabel').textContent='Day '+day+' · Cycle '+(Math.floor((day-1)/171)+1);
     $('readingState').textContent=selected===today()?"Today's reading":'Saved entry · '+selected;
     $('psalmTitle').textContent='Psalm '+r.chapter+(r.part?' · Section '+r.part+' of 22':'');$('verseRange').textContent=r.part?'· Verses '+r.first+'–'+r.last:'';
+    $('readingRailLabel').textContent=$('psalmTitle').textContent+' · KJV';
     $('response').value=draft.text;$('zoneInfo').textContent='Journal time zone: '+profile.timeZone;
     $('highlightHelp').textContent=selected===today()?'Select words, then choose a color. Select a highlight to edit it.':'Highlights are read-only for past dates. You can still edit your response.';
-    renderText();fillRange();controls();calendar();
+    syncView();renderText();fillRange();controls();calendar();
   }
   async function openDate(date,focus=false,skipDraft=false){
     if(busy||!profile||stale)return false;
     if(!skipDraft&&!(await leaveDraft()))return false;
     busy=true;controls();
-    try{const loaded=await S.load(db,date);profile=loaded.profile;state=loaded.state;entry=loaded.entry||null;pack=loaded.pack;selected=date;draft={text:entry?.text||'',highlights:clone(entry?.highlights||[])};pending=chosen=null;failed=false;notice('');render();if(focus)$('psalmTitle').focus();return true;}
+    try{const loaded=await S.load(db,date);closePanel(false);profile=loaded.profile;state=loaded.state;entry=loaded.entry||null;pack=loaded.pack;selected=date;draft={text:entry?.text||'',highlights:clone(entry?.highlights||[])};pending=chosen=null;failed=false;view.editing=false;notice('');render();if(focus)($('scriptureContent').hidden?$('entryHeading'):$('psalmTitle')).focus();return true;}
     catch(e){notice(e.message,true);return false;}finally{busy=false;controls();calendar();}
   }
   async function start(){
@@ -145,7 +205,7 @@
       db?.close();db=await S.open({blocked:()=>{$('openingMessage').textContent='Close other Psalmist tabs, then wait for the journal to open.';},changed:()=>{stale=true;controls();notice('The application storage was upgraded. Keep any draft text, then reload.',true);}});
       const initialized=await S.initialize(db);profile=initialized.profile;state=initialized.state;stale=false;
       lastToday=today();const loaded=await S.load(db,lastToday);entry=loaded.entry||null;pack=loaded.pack;selected=lastToday;draft={text:entry?.text||'',highlights:clone(entry?.highlights||[])};
-      failed=false;pending=chosen=null;$('month').value=lastToday.slice(0,7);$('opening').hidden=true;$('appContent').hidden=false;render();await history();
+      closePanel(false);view.editing=false;failed=false;pending=chosen=null;$('month').value=lastToday.slice(0,7);$('opening').hidden=true;$('appContent').hidden=false;render();await history();
     }catch(e){profile=null;entry=null;pack=null;stale=false;$('opening').querySelector('h1').textContent="Your journal couldn't be opened";$('openingMessage').textContent=e.message+'\nSaved data has not been replaced.';$('recovery').hidden=false;$('recoverBackup').disabled=!db;$('today').disabled=true;}
     finally{startBusy=false;}
   }
@@ -186,14 +246,14 @@
     try{
       const backup=await S.encode(db),blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='psalmist-backup-'+S.dateIn(backup.payload.profile.timeZone)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
-      $('backupStatus').textContent="Backup download started. Check your browser's downloads.";
+      $('backupStatus').textContent="Backup download started. Check your browser's downloads.";notice($('backupStatus').textContent);
       try{await S.backupHistory(db,new Date().toISOString());await history();}catch{$('backupHistory').textContent='Backup download started; download history could not be saved.';}
       return true;
-    }catch(e){$('backupStatus').textContent='Backup could not be prepared. '+e.message;return false;}
+    }catch(e){$('backupStatus').textContent='Backup could not be prepared. '+e.message;notice($('backupStatus').textContent,true);return false;}
     finally{busy=false;controls();calendar();}
   }
   async function readBackup(file){
-    if(!file||busy||!db)return;busy=true;controls();$('backupStatus').textContent='Checking backup…';
+    if(!file||busy||!db)return;closePanel();busy=true;controls();$('backupStatus').textContent='Checking backup…';
     try{
       if(file.size>25*1024*1024)throw Error('Choose a backup smaller than 25 MiB.');
       const decoded=await S.decode(await file.text());
@@ -204,7 +264,7 @@
       $('restoreDescription').textContent=decoded.legacy?'This older Psalmist journal will be converted to the current format. Original dates, highlights, and saved timestamps will be retained.':'The backup passed version, integrity, and journal validation.';
       $('restoreStatus').textContent='';$('restoreStatus').classList.remove('error');$('backupCurrent').disabled=!snap.profile||!snap.state;
       $('backupStatus').textContent='Backup checked. Review before replacing your journal.';$('restoreDialog').showModal();$('cancelRestore').focus();
-    }catch(e){$('backupStatus').textContent=e.message;if(!profile)$('openingMessage').textContent=e.message+' Saved data has not been replaced.';}
+    }catch(e){$('backupStatus').textContent=e.message;notice(e.message,true);if(!profile)$('openingMessage').textContent=e.message+' Saved data has not been replaced.';}
     finally{busy=false;controls();}
   }
   async function confirmRestore(){
@@ -219,7 +279,7 @@
     }catch(e){$('restoreStatus').textContent=e.message;$('restoreStatus').classList.add('error');}
     finally{busy=false;for(const id of ['confirmRestore','cancelRestore','backupCurrent'])$(id).disabled=false;controls();}
   }
-  async function selectBackup(){if(busy||!db)return;if(profile&&!(await leaveDraft()))return;$('backupFile').value='';$('backupFile').click();}
+  async function selectBackup(){if(busy||!db)return;closePanel();if(profile&&!(await leaveDraft()))return;$('backupFile').value='';$('backupFile').click();}
   async function externalChange(message){
     if(!profile||busy)return;
     if(message.kind==='restore'||message.date===selected){
@@ -245,7 +305,21 @@
     if(selected!==now){render();notice('A new day has begun. Highlights for this date are now read-only. Use Today\'s reading to continue.'+(marksDirty()?' Unsaved highlight changes remain in view but cannot be saved for a past date.':''));}
     controls();calendar();
   }
-  $('response').oninput=()=>{draft.text=$('response').value;controls();};$('save').onclick=()=>stale?reviewLatest():saveText();
+  $('response').oninput=()=>{draft.text=$('response').value;controls();};
+  $('editResponse').onclick=()=>{if(busy||stale)return;view.editing=true;$('response').value=draft.text;controls();$('response').focus();};
+  $('cancelResponse').onclick=()=>{if(busy||stale)return;draft.text=entry?.text||'';$('response').value=draft.text;view.editing=false;if(!marksDirty()){failed=false;notice('');}controls();if(!$('editResponse').hidden)$('editResponse').focus();};
+  $('save').onclick=async()=>{
+    if(stale){await reviewLatest();return;}
+    if(await saveText()){view.editing=false;controls();if(isPast()&&!$('editResponse').hidden)$('editResponse').focus();}
+  };
+  $('toggleScripture').onclick=()=>togglePanel('scripture');$('toggleSidebar').onclick=()=>togglePanel('sidebar');
+  $('yourDays').onclick=()=>openPanel('sidebar','calendarTitle');
+  document.querySelectorAll('[data-section]').forEach(b=>b.onclick=()=>openPanel('sidebar',b.dataset.section));
+  $('closePanel').onclick=()=>closePanel();$('panelDialog').oncancel=e=>{e.preventDefault();closePanel();};
+  $('panelDialog').onclose=()=>{if(view.drawer&&!$('panelDialog').open)closePanel();};
+  narrow.addEventListener('change',()=>{closePanel(false);renderPanels();if(isPast())$('entryHeading').focus();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isPast()&&!document.querySelector('dialog[open]')&&!view.sidebarCollapsed){view.sidebarCollapsed=true;renderPanels();$('toggleSidebar').focus();}});
+  $('skipReading').onclick=e=>{if(isPast()) {e.preventDefault();openPanel('scripture');$('psalmTitle').focus();}};
   document.querySelectorAll('.color').forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onclick=()=>highlight(b.dataset.color);});$('remove').onclick=()=>highlight(null,true);
   document.addEventListener('selectionchange',captureSelection);$('verses').addEventListener('pointerup',captureSelection);
   $('fromVerse').onchange=rangeWords;$('toVerse').onchange=rangeWords;$('rangeApply').onclick=applyRange;

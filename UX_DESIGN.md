@@ -5,7 +5,7 @@ Date: October 13, 2026
 Status: Proposed implementation specification  
 Requirements baseline: `psalms-web-app-user-requirements.md`, version 1.17
 
-Past-entry design addendum (October 16, 2026): [PAST_ENTRY_DESIGN.md](design/past-entry/PAST_ENTRY_DESIGN.md) records the selected three-column journal view, Lucida Handwriting response, edit-before-typing interaction, and independent horizontally collapsible side panels with the right panel collapsed by default. For past-entry presentation, that addendum takes precedence over conflicting layout and typography guidance below. [Saved interactive reference](design/past-entry/past-entry-reference.html).
+Past-entry design addendum (October 16, 2026; font updated November 4, 2026): [PAST_ENTRY_DESIGN.md](design/past-entry/PAST_ENTRY_DESIGN.md) records the selected three-column journal view, Ink Free response, edit-before-typing interaction, and independent horizontally collapsible side panels with the right panel collapsed by default. For past-entry presentation, that addendum takes precedence over conflicting layout and typography guidance below. [Saved interactive reference](design/past-entry/past-entry-reference.html) (October 16 snapshot; still uses the previously selected Lucida Handwriting font).
 
 ## 1. Purpose and design philosophy
 
@@ -29,7 +29,7 @@ The application does not introduce streaks, achievement badges, reminders, socia
 
 ## 2. Scope and decision status
 
-This document specifies the intended experience for the IndexedDB application. The current `psalmist.html` still uses local-file persistence; its appearance is the visual starting point, not evidence that the new workflows are implemented.
+This document specifies the intended experience for the IndexedDB application. The current `psalmist.html` uses IndexedDB for the authoritative journal, with JSON backup export and restore. The past-entry presentation follows the linked addendum; verification of implemented behavior is recorded in `IMPLEMENTATION_NOTES.md`.
 
 Confirmed behavior from the requirements and conversation:
 

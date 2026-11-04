@@ -4,3 +4,74 @@
 @media(max-width:599px){header{padding:16px;gap:12px;flex-wrap:wrap}.brand{font-size:1.625rem}header button{font-size:.875rem}main{padding:0 16px}.intro{align-items:start;flex-direction:column;gap:0}.paper{padding:20px}h2{font-size:1.75rem}h3{font-size:1.375rem}.quote{font-size:1.3125rem}.rangegrid{grid-template-columns:1fr}.savebar{flex-direction:column;align-items:stretch}.side{padding:20px}.opening{margin:24px 16px}.dialogActions{flex-direction:column}.dialogActions button{width:100%}dl{grid-template-columns:1fr;gap:4px}dd{margin-bottom:8px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){mark{outline:1px solid CanvasText}.day.saved::after{background:CanvasText}.day[aria-pressed=true],.color[aria-pressed=true]{outline:2px solid Highlight}.day.today{border:1px dashed CanvasText}}
+
+/* The response is a sibling of Scripture, so either historical side can collapse. */
+#notice:empty{display:none}
+#notice{margin:0 0 20px}
+.intro>div:last-child{text-align:right}
+.response{margin:0;border-top:1px solid var(--border)}
+.responseHeading,.panelHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.responseHeading h3{margin:0}
+.responseHeading{margin-bottom:12px}
+.responseActions{display:flex;gap:8px;flex-wrap:wrap}
+.layout[data-view=today] #readingCard{grid-column:1;grid-row:1;border-bottom:0;border-radius:16px 16px 0 0}
+.layout[data-view=today] #responsePanel{grid-column:1;grid-row:2;border-radius:0 0 16px 16px;margin-top:-30px}
+.layout[data-view=today] #journalSidebar{grid-column:2;grid-row:1/3}
+.journalWriting{font-family:'Ink Free',cursive;font-size:1.5rem;line-height:1.95;overflow-wrap:anywhere}
+#responseRead{white-space:pre-wrap;margin:28px 0;min-height:180px}
+#response{font-family:'Ink Free',cursive}
+#responsePanel .savebar{border-top:1px solid var(--border);padding-top:16px;flex-wrap:wrap}
+main:has(.layout[data-view=past]){max-width:1280px;margin-top:28px}
+.layout[data-view=past]{--scripture-column:minmax(0,.85fr);--sidebar-column:248px;grid-template-columns:var(--scripture-column) minmax(0,1.3fr) var(--sidebar-column);gap:16px;align-items:stretch}
+.layout[data-view=past][data-scripture-collapsed=true]{--scripture-column:60px}
+.layout[data-view=past][data-sidebar-collapsed=true]{--sidebar-column:60px}
+.layout[data-view=past] #readingCard,.layout[data-view=past] #responsePanel{padding:24px;min-width:0}
+.layout[data-view=past] #readingCard{grid-column:1}
+.layout[data-view=past] #responsePanel{grid-column:2;background-color:#f8f1df;background-image:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.5),transparent 70%),repeating-linear-gradient(4deg,rgba(120,93,46,.025) 0px,rgba(120,93,46,.025) 1px,transparent 1px,transparent 4px),repeating-linear-gradient(94deg,rgba(120,93,46,.018) 0px,rgba(120,93,46,.018) 1px,transparent 1px,transparent 5px);border-color:#ddd3bc;min-height:760px;display:flex;flex-direction:column}
+.layout[data-view=past] #responseRead{flex:1}
+.layout[data-view=past] #response{min-height:480px;background:rgba(255,254,251,.35)}
+.layout[data-view=past] #journalSidebar{grid-column:3;background:var(--side);border:1px solid var(--border);border-radius:14px;padding:8px;min-width:0}
+.layout[data-view=past] .side{margin:0;padding:16px 8px;border-radius:0}
+.layout[data-view=past] .side+.side{border-top:1px solid var(--border)}
+.layout[data-view=past] .side h3{font-size:1.25rem}
+.layout[data-view=past] .calendar{margin:16px -4px}
+.layout[data-view=past] #highlightHelp{border-top:1px solid var(--border);padding-top:16px;margin-top:24px}
+.panelHeading{flex-wrap:nowrap;margin-bottom:12px}
+.iconButton{position:relative;min-width:44px;padding:8px;background:transparent;border:0;font-size:1.25rem;flex:none}
+.iconButton:hover::after,.iconButton:focus-visible::after{content:attr(data-tooltip);position:absolute;right:100%;top:0;background:var(--paper);color:var(--ink);border:1px solid var(--control);border-radius:6px;padding:8px 12px;width:max-content;max-width:220px;font-size:.875rem;z-index:5;pointer-events:none}
+.iconButton:not([data-tooltip])::after{display:none}
+.sidebarRail{display:flex;flex-direction:column;align-items:center;gap:12px}
+.scriptureRail{display:flex;flex-direction:column;align-items:center;gap:20px;margin-top:24px}
+.scriptureRail span:last-child{writing-mode:vertical-rl;font:1rem/1.5 Georgia,serif;white-space:nowrap}
+.layout[data-view=past][data-scripture-collapsed=true] #readingCard{padding:12px 7px}
+.layout[data-scripture-collapsed=true] #scriptureHeading,.layout[data-sidebar-collapsed=true] #sidebarHeading{justify-content:center;gap:0}
+#sidebarLabel{font:1.25rem/1.4 Georgia,serif}
+.verseText{font-family:Georgia,'Times New Roman',serif}
+mark[aria-label$='read-only']{cursor:text}
+.panelDrawer{margin:0 0 0 auto;height:100dvh;max-height:100dvh;width:min(360px,calc(100% - 16px));border-radius:14px 0 0 14px;padding:20px}
+.panelDrawer[data-panel=scripture]{margin:0 auto 0 0;border-radius:0 14px 14px 0}
+.panelDrawer .panelHeading h2{font-size:1.25rem;margin:0}
+.panelDrawer .side{padding:16px 0;background:var(--paper);margin:0}
+.panelDrawer .side+.side{border-top:1px solid var(--border)}
+.panelDrawer .calendar{margin:16px 0}
+@media(max-width:959px){
+  .layout[data-view=today] #journalSidebar{grid-column:1;grid-row:3}
+  .layout[data-view=today] #responsePanel{margin-top:-30px}
+}
+@media(min-width:851px){.layout[data-view=past] .verses{font-size:1.3125rem;line-height:1.9}}
+@media(max-width:850px){
+  .layout[data-view=past]{grid-template-columns:44px minmax(0,1fr) 44px;gap:8px}
+  .layout[data-view=past] #readingCard,.layout[data-view=past][data-scripture-collapsed=true] #readingCard{padding:12px 0}
+  .layout[data-view=past] #journalSidebar{padding:8px 0}
+  .layout[data-view=past] #responsePanel{padding:20px;min-height:0}
+  main:has(.layout[data-view=past]){padding:0 8px}
+  .layout[data-view=past] #readingCard,.layout[data-view=past] #responsePanel,.layout[data-view=past] #journalSidebar{grid-row:1}
+}
+@media(max-width:599px){
+  .intro>div:last-child{text-align:left}
+  .layout[data-view=today] #responsePanel{margin-top:-30px}
+  .savebar .responseActions{width:100%}
+  .responseActions button{flex:1}
+}
+@media(max-width:420px){.journalWriting{font-size:1.25rem}.layout[data-view=past] #responsePanel{padding:16px}}
+@media(max-width:420px){.panelDrawer{width:100%;padding:12px 4px}.panelDrawer .calendar{gap:0}.panelDrawer .panelHeading,.panelDrawer .side>p,.panelDrawer .side>h3{padding-inline:8px}}
