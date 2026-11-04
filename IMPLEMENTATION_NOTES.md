@@ -50,3 +50,24 @@ Desktop and mobile screenshots were inspected for layout. JavaScript and launche
 - Backup format version 1 and the known legacy journal version 1 are supported. Newer formats are rejected until a corresponding converter is implemented.
 - Test data remained in isolated browser profiles. No existing personal journal file was opened or modified by the checks.
 - The product requirements were not changed during implementation. `UX_DESIGN.md` remains the design specification; the application and this note record implementation status.
+
+## Past-entry journal UI — November 4, 2026
+
+Implemented the selected past-entry addendum with Ink Free replacing the archived mock's Lucida Handwriting. The response is now a sibling of Scripture in `src/shell.html`. Historical entries use Scripture / response / journal-sidebar columns, independent horizontal collapse controls, and a right sidebar initially collapsed. Today's reading retains direct writing with Scripture above the response.
+
+Past responses open in reading mode. Edit reveals a labeled textarea; Save returns to reading mode only after successful persistence, and Cancel restores the latest committed response without writing. Both response modes use Ink Free at 24 px / 1.95 desktop (20 px at widths up to 420 px). Historical responses use the selected unruled warm paper and procedural grain. Font delivery is system-local, with a cursive fallback where Ink Free is unavailable; no font file or external font service was added.
+
+At widths up to 850 px, each side is a 44 px rail. Opening a side moves its existing content into a native modal drawer with Escape dismissal and focus return. The same DOM controls are reused, avoiding duplicate calendar or backup fields. Drawers close before navigation/restore confirmation dialogs. Notices are outside the collapsing panels, and backup failures remain visible even when the sidebar is hidden.
+
+The IndexedDB schema, transaction layer, backup format, time-zone policy, and launch origin are unchanged. Panel toggles do not write journal data. The delivered `psalmist.html` was rebuilt through `build.ps1`; its Bible JSON is byte-for-byte identical to the pre-change version. The archived `design/past-entry/` reference remains an October 16 snapshot; its font and mock-only handlers are not used by the application.
+
+Verification:
+
+- `node --check src/app.js` and `git diff --check` passed.
+- Existing `work/verify.cjs` passed (its historical-edit check now clicks Edit response).
+- Existing `work/verify-extra.cjs` passed: quota rollback/retry, atomic restore failure, two-tab conflicts, midnight locking, and version-1 database migration.
+- New maintained `work/verify-past-entry.cjs` passed: four panel combinations; read-before-edit; literal markup rendered as plain text; draft preservation; Cancel/no-op behavior; failed past saves and retry; original-date updates with preserved highlights; highlights-only/empty entries; navigation choices; rollover; real two-tab past-entry conflicts; long mobile drafts; and invalid-backup feedback outside the closed drawer.
+- Responsive checks passed at 320, 390, 768, 1024, and 1440 px. Mobile drawer Escape/focus return and calendar target widths were checked. Desktop reading/editing and mobile screenshots in `work/` were visually inspected.
+- Chromium's platform-font inspection confirmed Ink Free glyphs in displayed response text. The textarea's computed font and its rendered handwriting were checked separately because Chromium's font-node inspection does not expose its native shadow text.
+
+These checks used isolated Chromium profiles and fixture journals, not the user's saved journal. Other browser/OS font availability and a full assistive-technology audit remain unverified. This change does not perform the separately planned TypeScript migration.
