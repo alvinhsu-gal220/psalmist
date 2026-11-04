@@ -7,6 +7,15 @@ work/*
 # Local dependencies and generated staging output.
 node_modules/
 build/
+.firebase/
+firebase-debug.log*
+
+# Local Firebase deployment configuration, instructions, and CLI binary.
+/.firebaserc
+/firebase.json
+/prepare-hosting.ps1
+/FIREBASE-DEPLOY.md
+/firebase-tools-instant-win.exe
 
 # Design references are excluded from commit checks and staging.
 /design/
